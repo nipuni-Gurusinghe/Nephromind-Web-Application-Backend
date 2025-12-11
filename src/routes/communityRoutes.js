@@ -1,34 +1,63 @@
+// src/routes/communityRoutes.js
+
 const express = require('express');
 const router = express.Router();
-const getCommunityEvents = require('../controllers/communityController').getCommunityEvents;
-const createCommunityEvent = require('../controllers/communityController').createCommunityEvent;
 
-// NOTE: You will need to create the corresponding controller file: communityController.js
-// const communityController = require('../controllers/communityController'); 
+// Import all necessary controller functions using destructuring
+const {
+    // Event Handlers
+    getCommunityEvents,
+    createCommunityEvent,
+    deleteCommunityEvent,
+    
+    // Multimedia Handlers (New)
+    getMultimedia,
+    createMultimedia,
+    deleteMultimedia,
 
-// --- PUBLIC VIEW ENDPOINTS (/community/...) ---
+    // Other Community Handlers (Placeholders)
+    getFAQs, createFAQ, deleteFAQ,
+    getSafeWaterGuides, createSafeWaterGuide, deleteSafeWaterGuide,
+    getFarmerSafetyTips, createFarmerSafetyTip, deleteFarmerSafetyTip,
+    getHealthyHabits, createHealthyHabit, deleteHealthyHabit
+
+} = require('../controllers/communityController'); 
+
+// NOTE: Add your authorization middleware (e.g., const { protect } = require('../middlewares/authMiddleware');)
+// and apply it to the Admin routes below.
+
+// ---------------------------------------------------------------------
+// --- PUBLIC VIEW ENDPOINTS (Base path: /community/...) ---------------
+// ---------------------------------------------------------------------
+
 router.get('/event', getCommunityEvents);
-router.get('/multimedia', (req, res) => res.status(501).json({ message: "GET /community/multimedia endpoint not yet implemented." }));
-router.get('/faq', (req, res) => res.status(501).json({ message: "GET /community/faq endpoint not yet implemented." }));
-router.get('/safe-water-guide', (req, res) => res.status(501).json({ message: "GET /community/safe-water-guide endpoint not yet implemented." }));
-router.get('/farmer-safety', (req, res) => res.status(501).json({ message: "GET /community/farmer-safety endpoint not yet implemented." }));
-router.get('/healthy-habits', (req, res) => res.status(501).json({ message: "GET /community/healthy-habits endpoint not yet implemented." }));
+router.get('/multimedia', getMultimedia);
+router.get('/faq', getFAQs);
+router.get('/safe-water-guide', getSafeWaterGuides);
+router.get('/farmer-safety', getFarmerSafetyTips);
+router.get('/healthy-habits', getHealthyHabits);
 
-// --- ADMIN MANAGEMENT ENDPOINTS (/admin/community/...) ---
-// DELETE
-router.delete('/event/:id', (req, res) => res.status(501).json({ message: "DELETE /admin/community/event/:id endpoint not yet implemented." }));
-router.delete('/multimedia/:id', (req, res) => res.status(501).json({ message: "DELETE /admin/community/multimedia/:id endpoint not yet implemented." }));
-router.delete('/faq/:id', (req, res) => res.status(501).json({ message: "DELETE /admin/community/faq/:id endpoint not yet implemented." }));
-router.delete('/safe-water-guide/:id', (req, res) => res.status(501).json({ message: "DELETE /admin/community/safe-water-guide/:id endpoint not yet implemented." }));
-router.delete('/farmer-safety/:id', (req, res) => res.status(501).json({ message: "DELETE /admin/community/farmer-safety/:id endpoint not yet implemented." }));
-router.delete('/healthy-habits/:id', (req, res) => res.status(501).json({ message: "DELETE /admin/community/healthy-habits/:id endpoint not yet implemented." }));
-// POST
-router.post('/event', createCommunityEvent);
-router.post('/multimedia', (req, res) => res.status(501).json({ message: "POST /admin/library/multimedia endpoint not yet implemented." })); // Corrected path based on API doc
-router.post('/faq', (req, res) => res.status(501).json({ message: "POST /admin/community/faq endpoint not yet implemented." }));
-router.post('/safe-water-guide', (req, res) => res.status(501).json({ message: "POST /admin/community/safe-water-guide endpoint not yet implemented." }));
-router.post('/farmer-safety', (req, res) => res.status(501).json({ message: "POST /admin/community/farmer-safety endpoint not yet implemented." }));
-router.post('/healthy-habits', (req, res) => res.status(501).json({ message: "POST /admin/community/healthy-habits endpoint not yet implemented." }));
+
+// ---------------------------------------------------------------------
+// --- ADMIN MANAGEMENT ENDPOINTS (Base path: /admin/community/...) ----
+// ---------------------------------------------------------------------
+
+// --- POST (Creation) Routes ---
+router.post('/event', createCommunityEvent); 
+router.post('/multimedia', createMultimedia);
+router.post('/faq', createFAQ);
+router.post('/safe-water-guide', createSafeWaterGuide);
+router.post('/farmer-safety', createFarmerSafetyTip);
+router.post('/healthy-habits', createHealthyHabit);
+
+
+// --- DELETE Routes ---
+router.delete('/event/:id', deleteCommunityEvent);
+router.delete('/multimedia/:id', deleteMultimedia);
+router.delete('/faq/:id', deleteFAQ);
+router.delete('/safe-water-guide/:id', deleteSafeWaterGuide);
+router.delete('/farmer-safety/:id', deleteFarmerSafetyTip);
+router.delete('/healthy-habits/:id', deleteHealthyHabit);
 
 
 module.exports = router;
