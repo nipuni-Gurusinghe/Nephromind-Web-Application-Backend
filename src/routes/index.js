@@ -13,7 +13,7 @@ const authRoutes = require('./authRoutes');
 router.use('/admin', authRoutes); 
 
 // Future routes will be mounted here:
-// router.use('/admin', require('./communityRoutes')); 
+router.use('/admin', require('./communityRoutes')); 
 // router.use('/admin', require('./doctorRoutes')); 
 
 module.exports = router;
