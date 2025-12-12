@@ -96,3 +96,29 @@ exports.createEvent = async (eventData) => {
     throw new Error("Failed to create the event in the database.");
   }
 };
+
+/**
+ * Deletes a community event by its document ID.
+ * (DELETE /api/community/events/:id)
+ * @param {string} eventId - The ID of the event document to delete.
+ * @returns {Promise<boolean>} True if the deletion attempt succeeded.
+ */
+exports.deleteEvent = async (eventId) => {
+    try {
+        // Check if the event exists before attempting to delete (optional but helpful)
+        const docRef = db.collection(COLLECTION_NAME).doc(eventId);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            // Throw an error that the controller can catch to return a 404
+            throw new Error("Event not found.");
+        }
+
+        await docRef.delete();
+        return true;
+    } catch (error) {
+        console.error("Error deleting community event:", error);
+        // Re-throw the error to be handled by the controller
+        throw error;
+    }
+};
