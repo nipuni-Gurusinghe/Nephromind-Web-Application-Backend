@@ -3,9 +3,9 @@
 // Import all required Firebase Model utilities
 const CommunityEvent = require('../models/CommunityEvent');          
 const Multimedia = require('../models/Multimedia');          
-const CommunityFAQ = require('../models/CommunityFAQ');
+const CommunityFAQ = require('../models/CommunityFAQ'); // <-- FULLY IMPLEMENTED
 const FarmerSafetyTip = require('../models/FarmerSafetyTip'); 
-const HealthyHabit = require('../models/HealthyHabit');       // <-- Imported Model
+const HealthyHabit = require('../models/HealthyHabit');       
 const SafeWaterGuide = require('../models/SafeWaterGuide');
 
 // ----------------------------------------------------------------------
@@ -370,12 +370,69 @@ exports.deleteHealthyHabit = async (req, res) => {
     }
 };
 
-
 // ----------------------------------------------------------------------
-//                        OTHER COMMUNITY HANDLERS (PLACEHOLDERS)
+//                        COMMUNITY FAQ HANDLERS (FIREBASE IMPLEMENTATION)
 // ----------------------------------------------------------------------
 
-// Only FAQs remain as a placeholder
-exports.getFAQs = (req, res) => res.status(501).json({ message: "FAQ handler not implemented (Firebase)" });
-exports.createFAQ = (req, res) => res.status(501).json({ message: "FAQ handler not implemented (Firebase)" });
-exports.deleteFAQ = (req, res) => res.status(501).json({ message: "FAQ handler not implemented (Firebase)" });
+/**
+ * @route GET /community/faq
+ * @desc Get all FAQs.
+ * @access Public / Admin
+ */
+exports.getFAQs = async (req, res) => {
+    try {
+        const faqs = await CommunityFAQ.getFAQs();
+        res.status(200).json(faqs);
+    } catch (error) {
+        console.error("Error in getFAQs controller:", error.message);
+        res.status(500).json({ 
+            message: "Server Error: Could not retrieve FAQs.", 
+            details: error.message 
+        });
+    }
+};
+
+/**
+ * @route POST /admin/community/faq
+ * @desc Create a new FAQ.
+ * @access Private/Admin
+ */
+exports.createFAQ = async (req, res) => {
+    const faqData = req.body;
+    if (!faqData.question || !faqData.answer) {
+        return res.status(400).json({ 
+            message: 'Missing required fields: question and answer are mandatory.' 
+        });
+    }
+
+    try {
+        const newFAQ = await CommunityFAQ.createFAQ(faqData);
+        res.status(201).json(newFAQ);
+
+    } catch (error) {
+        console.error("Error in createFAQ controller:", error.message);
+        res.status(500).json({ 
+            message: "Server Error: Could not create the FAQ.", 
+            details: error.message 
+        });
+    }
+};
+
+/**
+ * @route DELETE /admin/community/faq/:id
+ * @desc Delete an FAQ.
+ * @access Private/Admin
+ */
+exports.deleteFAQ = async (req, res) => {
+    try {
+        const wasDeleted = await CommunityFAQ.deleteFAQ(req.params.id);
+        if (!wasDeleted) return res.status(404).json({ message: 'FAQ not found.' });
+        res.status(204).send();
+    } catch (error) {
+        console.error("Error in deleteFAQ controller:", error.message);
+        res.status(500).json({ 
+            message: 'Error deleting FAQ', 
+            details: error.message 
+        });
+    }
+};

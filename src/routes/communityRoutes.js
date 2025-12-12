@@ -26,12 +26,15 @@ const {
     deleteFarmerSafetyTip,
 
     // Healthy Habit Handlers
-    getHealthyHabits, // <-- Implemented
-    createHealthyHabit, // <-- Implemented
-    deleteHealthyHabit, // <-- Implemented
+    getHealthyHabits, 
+    createHealthyHabit, 
+    deleteHealthyHabit, 
 
-    // Other Community Handlers (Placeholders)
-    getFAQs, createFAQ, deleteFAQ,
+    // Community FAQ Handlers 
+    getFAQs, // <-- Implemented
+    createFAQ, // <-- Implemented
+    deleteFAQ // <-- Implemented
+
 } = require('../controllers/communityController'); 
 
 // ---------------------------------------------------------------------
@@ -40,10 +43,11 @@ const {
 
 router.get('/event', getCommunityEvents);
 router.get('/multimedia', getMultimedia);
-router.get('/faq', getFAQs);
+router.get('/faq', getFAQs); // <-- GET Route
 router.get('/safe-water-guide', getSafeWaterGuides); 
 router.get('/farmer-safety', getFarmerSafetyTips); 
-router.get('/healthy-habits', getHealthyHabits); // <-- GET Route
+router.get('/healthy-habits', getHealthyHabits); 
+
 
 // ---------------------------------------------------------------------
 // --- ADMIN MANAGEMENT ENDPOINTS (Base path: /admin/community/...) ----
@@ -52,19 +56,19 @@ router.get('/healthy-habits', getHealthyHabits); // <-- GET Route
 // --- POST (Creation) Routes ---
 router.post('/event', createCommunityEvent); 
 router.post('/multimedia', createMultimedia);
-router.post('/faq', createFAQ);
+router.post('/faq', createFAQ); // <-- POST Route
 router.post('/safe-water-guide', createSafeWaterGuide);
 router.post('/farmer-safety', createFarmerSafetyTip); 
-router.post('/healthy-habits', createHealthyHabit); // <-- POST Route
+router.post('/healthy-habits', createHealthyHabit);
 
 
 // --- DELETE Routes ---
 router.delete('/event/:id', deleteCommunityEvent);
 router.delete('/multimedia/:id', deleteMultimedia);
-router.delete('/faq/:id', deleteFAQ);
+router.delete('/faq/:id', deleteFAQ); // <-- DELETE Route
 router.delete('/safe-water-guide/:id', deleteSafeWaterGuide);
 router.delete('/farmer-safety/:id', deleteFarmerSafetyTip); 
-router.delete('/healthy-habits/:id', deleteHealthyHabit); // <-- DELETE Route
+router.delete('/healthy-habits/:id', deleteHealthyHabit); 
 
 
 module.exports = router;
