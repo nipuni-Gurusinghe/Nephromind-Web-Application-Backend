@@ -1,15 +1,15 @@
 // nephromind-admin-backend/src/controllers/communityController.js
 
 // Import all required Firebase Model utilities
-const CommunityEvent = require('../models/CommunityEvent'); // Assumed Firebase structure
-const Multimedia = require('../models/Multimedia');          // NEW Firebase structure
+const CommunityEvent = require('../models/CommunityEvent');          
+const Multimedia = require('../models/Multimedia');          
 const CommunityFAQ = require('../models/CommunityFAQ');
-const FarmerSafetyTip = require('../models/FarmerSafetyTip');
-const HealthyHabit = require('../models/HealthyHabit');
+const FarmerSafetyTip = require('../models/FarmerSafetyTip'); 
+const HealthyHabit = require('../models/HealthyHabit');       // <-- Imported Model
 const SafeWaterGuide = require('../models/SafeWaterGuide');
 
 // ----------------------------------------------------------------------
-//                        COMMUNITY EVENT HANDLERS (Based on your provided Firebase model)
+//                        COMMUNITY EVENT HANDLERS (FIREBASE IMPLEMENTATION)
 // ----------------------------------------------------------------------
 
 /**
@@ -72,8 +72,7 @@ exports.createCommunityEvent = async (req, res) => {
  */
 exports.deleteCommunityEvent = async (req, res) => {
     try {
-        // You may need validation here if your IDs are not simple Firestore IDs
-        const wasDeleted = await CommunityEvent.deleteEvent(req.params.id); // Assuming this static method exists
+        const wasDeleted = await CommunityEvent.deleteEvent(req.params.id); 
         if (!wasDeleted) return res.status(404).json({ message: 'Event not found.' });
         res.status(204).send();
     } catch (error) {
@@ -83,7 +82,7 @@ exports.deleteCommunityEvent = async (req, res) => {
 
 
 // ----------------------------------------------------------------------
-//                        MULTIMEDIA HANDLERS (FIREBASE IMPLEMENTATION)
+//                        MULTIMEDIA HANDLERS (FIREBASE IMPLEMENTATION)
 // ----------------------------------------------------------------------
 
 /**
@@ -136,7 +135,6 @@ exports.createMultimedia = async (req, res) => {
 
     } catch (error) {
         console.error('Error creating multimedia:', error);
-        // Firebase errors typically have different structures than Mongoose 
         res.status(500).json({ 
             message: 'Server error creating multimedia content', 
             details: error.message 
@@ -172,21 +170,212 @@ exports.deleteMultimedia = async (req, res) => {
 };
 
 // ----------------------------------------------------------------------
-//                        OTHER COMMUNITY HANDLERS (PLACEHOLDERS)
+//                        SAFE WATER GUIDE HANDLERS (FIREBASE IMPLEMENTATION)
 // ----------------------------------------------------------------------
 
+/**
+ * @route GET /community/safe-water-guide
+ * @desc Get all safe water guides.
+ * @access Public / Admin
+ */
+exports.getSafeWaterGuides = async (req, res) => {
+    try {
+        const guides = await SafeWaterGuide.getSafeWaterGuides();
+        res.status(200).json(guides);
+    } catch (error) {
+        console.error("Error in getSafeWaterGuides controller:", error.message);
+        res.status(500).json({ 
+            message: "Server Error: Could not retrieve safe water guides.", 
+            details: error.message 
+        });
+    }
+};
+
+/**
+ * @route POST /admin/community/safe-water-guide
+ * @desc Create a new safe water guide.
+ * @access Private/Admin
+ */
+exports.createSafeWaterGuide = async (req, res) => {
+    const guideData = req.body;
+    if (!guideData.title || !guideData.content) {
+        return res.status(400).json({ 
+            message: 'Missing required fields: title and content are mandatory.' 
+        });
+    }
+
+    try {
+        const newGuide = await SafeWaterGuide.createSafeWaterGuide(guideData);
+        res.status(201).json(newGuide);
+
+    } catch (error) {
+        console.error("Error in createSafeWaterGuide controller:", error.message);
+        res.status(500).json({ 
+            message: "Server Error: Could not create the safe water guide.", 
+            details: error.message 
+        });
+    }
+};
+
+/**
+ * @route DELETE /admin/community/safe-water-guide/:id
+ * @desc Delete a safe water guide.
+ * @access Private/Admin
+ */
+exports.deleteSafeWaterGuide = async (req, res) => {
+    try {
+        const wasDeleted = await SafeWaterGuide.deleteSafeWaterGuide(req.params.id);
+        if (!wasDeleted) return res.status(404).json({ message: 'Safe Water Guide not found.' });
+        res.status(204).send();
+    } catch (error) {
+        console.error("Error in deleteSafeWaterGuide controller:", error.message);
+        res.status(500).json({ 
+            message: 'Error deleting safe water guide', 
+            details: error.message 
+        });
+    }
+};
+
+// ----------------------------------------------------------------------
+//                        FARMER SAFETY TIPS HANDLERS (FIREBASE IMPLEMENTATION)
+// ----------------------------------------------------------------------
+
+/**
+ * @route GET /community/farmer-safety
+ * @desc Get all farmer safety tips.
+ * @access Public / Admin
+ */
+exports.getFarmerSafetyTips = async (req, res) => {
+    try {
+        const tips = await FarmerSafetyTip.getFarmerSafetyTips();
+        res.status(200).json(tips);
+    } catch (error) {
+        console.error("Error in getFarmerSafetyTips controller:", error.message);
+        res.status(500).json({ 
+            message: "Server Error: Could not retrieve farmer safety tips.", 
+            details: error.message 
+        });
+    }
+};
+
+/**
+ * @route POST /admin/community/farmer-safety
+ * @desc Create a new farmer safety tip.
+ * @access Private/Admin
+ */
+exports.createFarmerSafetyTip = async (req, res) => {
+    const tipData = req.body;
+    if (!tipData.title || !tipData.content) {
+        return res.status(400).json({ 
+            message: 'Missing required fields: title and content are mandatory.' 
+        });
+    }
+
+    try {
+        const newTip = await FarmerSafetyTip.createFarmerSafetyTip(tipData);
+        res.status(201).json(newTip);
+
+    } catch (error) {
+        console.error("Error in createFarmerSafetyTip controller:", error.message);
+        res.status(500).json({ 
+            message: "Server Error: Could not create the farmer safety tip.", 
+            details: error.message 
+        });
+    }
+};
+
+/**
+ * @route DELETE /admin/community/farmer-safety/:id
+ * @desc Delete a farmer safety tip.
+ * @access Private/Admin
+ */
+exports.deleteFarmerSafetyTip = async (req, res) => {
+    try {
+        const wasDeleted = await FarmerSafetyTip.deleteFarmerSafetyTip(req.params.id);
+        if (!wasDeleted) return res.status(404).json({ message: 'Farmer Safety Tip not found.' });
+        res.status(204).send();
+    } catch (error) {
+        console.error("Error in deleteFarmerSafetyTip controller:", error.message);
+        res.status(500).json({ 
+            message: 'Error deleting farmer safety tip', 
+            details: error.message 
+        });
+    }
+};
+
+// ----------------------------------------------------------------------
+//                        HEALTHY HABITS HANDLERS (FIREBASE IMPLEMENTATION)
+// ----------------------------------------------------------------------
+
+/**
+ * @route GET /community/healthy-habits
+ * @desc Get all healthy habits.
+ * @access Public / Admin
+ */
+exports.getHealthyHabits = async (req, res) => {
+    try {
+        const habits = await HealthyHabit.getHealthyHabits();
+        res.status(200).json(habits);
+    } catch (error) {
+        console.error("Error in getHealthyHabits controller:", error.message);
+        res.status(500).json({ 
+            message: "Server Error: Could not retrieve healthy habits.", 
+            details: error.message 
+        });
+    }
+};
+
+/**
+ * @route POST /admin/community/healthy-habits
+ * @desc Create a new healthy habit.
+ * @access Private/Admin
+ */
+exports.createHealthyHabit = async (req, res) => {
+    const habitData = req.body;
+    if (!habitData.title || !habitData.description) {
+        return res.status(400).json({ 
+            message: 'Missing required fields: title and description are mandatory.' 
+        });
+    }
+
+    try {
+        const newHabit = await HealthyHabit.createHealthyHabit(habitData);
+        res.status(201).json(newHabit);
+
+    } catch (error) {
+        console.error("Error in createHealthyHabit controller:", error.message);
+        res.status(500).json({ 
+            message: "Server Error: Could not create the healthy habit.", 
+            details: error.message 
+        });
+    }
+};
+
+/**
+ * @route DELETE /admin/community/healthy-habits/:id
+ * @desc Delete a healthy habit.
+ * @access Private/Admin
+ */
+exports.deleteHealthyHabit = async (req, res) => {
+    try {
+        const wasDeleted = await HealthyHabit.deleteHealthyHabit(req.params.id);
+        if (!wasDeleted) return res.status(404).json({ message: 'Healthy Habit not found.' });
+        res.status(204).send();
+    } catch (error) {
+        console.error("Error in deleteHealthyHabit controller:", error.message);
+        res.status(500).json({ 
+            message: 'Error deleting healthy habit', 
+            details: error.message 
+        });
+    }
+};
+
+
+// ----------------------------------------------------------------------
+//                        OTHER COMMUNITY HANDLERS (PLACEHOLDERS)
+// ----------------------------------------------------------------------
+
+// Only FAQs remain as a placeholder
 exports.getFAQs = (req, res) => res.status(501).json({ message: "FAQ handler not implemented (Firebase)" });
 exports.createFAQ = (req, res) => res.status(501).json({ message: "FAQ handler not implemented (Firebase)" });
 exports.deleteFAQ = (req, res) => res.status(501).json({ message: "FAQ handler not implemented (Firebase)" });
-
-exports.getSafeWaterGuides = (req, res) => res.status(501).json({ message: "Safe Water Guide handler not implemented (Firebase)" });
-exports.createSafeWaterGuide = (req, res) => res.status(501).json({ message: "Safe Water Guide handler not implemented (Firebase)" });
-exports.deleteSafeWaterGuide = (req, res) => res.status(501).json({ message: "Safe Water Guide handler not implemented (Firebase)" });
-
-exports.getFarmerSafetyTips = (req, res) => res.status(501).json({ message: "Farmer Safety Tip handler not implemented (Firebase)" });
-exports.createFarmerSafetyTip = (req, res) => res.status(501).json({ message: "Farmer Safety Tip handler not implemented (Firebase)" });
-exports.deleteFarmerSafetyTip = (req, res) => res.status(501).json({ message: "Farmer Safety Tip handler not implemented (Firebase)" });
-
-exports.getHealthyHabits = (req, res) => res.status(501).json({ message: "Healthy Habit handler not implemented (Firebase)" });
-exports.createHealthyHabit = (req, res) => res.status(501).json({ message: "Healthy Habit handler not implemented (Firebase)" });
-exports.deleteHealthyHabit = (req, res) => res.status(501).json({ message: "Healthy Habit handler not implemented (Firebase)" });
