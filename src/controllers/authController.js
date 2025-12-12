@@ -89,6 +89,141 @@ exports.registerAdmin = async (req, res) => {
 // Path: /src/controllers/authController.js
 // ... (RegisterAdmin remains the same) ...
 
+/**
+ * @route POST /api/doctor/register
+ * @description Registers a new doctor user in Firebase Authentication AND saves their profile to Firestore.
+ * Request Body: { email, password, name, specialistArea (optional) }
+ * * **NEW FUNCTION ADDED**
+ */
+exports.registerDoctor = async (req, res) => {
+    const { email, password, name, specialistArea } = req.body;
+
+    // --- 1. Validation ---
+    if (!email || !password || !name) {
+        return res.status(400).json({ 
+            status: 'error', 
+            message: 'Missing required fields: email, password, and name.' 
+        });
+    }
+    if (password.length < 6) {
+        return res.status(400).json({
+            status: 'error',
+            message: 'Password must be at least 6 characters long (Firebase minimum).'
+        });
+    }
+
+    try {
+        // --- 2. Create User in Firebase Auth ---
+        const user = await auth.createUser({
+            email: email,
+            password: password,
+            displayName: name
+        });
+        
+        const userId = user.uid; // Get the Doctor ID
+
+        // --- 3. Set Custom Claim (Crucial for Doctor Role) ---
+        await auth.setCustomUserClaims(userId, { doctor: true });
+        
+        // --- 4. Save Doctor Data to Firestore (using the 'doctor_user_data' collection) ---
+        // The document ID is set to the Firebase Auth User ID (uid)
+        const doctorRef = db.collection('doctor_user_data').doc(userId);
+        
+        // ⚠️ CRITICAL SECURITY WARNING: Saving the plain text password here. 
+        // This follows your existing pattern but is highly insecure.
+        await doctorRef.set({
+            doctor_id: userId, // Explicitly saving the ID as requested
+            email: email,
+            username: name,
+            password: password, // <-- Insecurely stored plain text password
+            specialistArea: specialistArea || 'Unspecified', // Optional field
+            createdAt: new Date().toISOString(),
+        });
+
+        console.log(`[AUTH] New Doctor registered and Firestore profile created: ${userId} (${email})`);
+
+        // --- 5. Success Response ---
+        return res.status(201).json({
+            status: 'success',
+            doctorId: userId,
+        });
+
+    } catch (error) {
+        // --- 6. Error Handling ---
+        console.error('[AUTH] Doctor Registration Error:', error.code, error.message);
+        
+        let statusCode = 500;
+        let errorMessage = 'An unexpected server error occurred during doctor registration.';
+
+        if (error.code === 'auth/email-already-exists') {
+            statusCode = 409; 
+            errorMessage = 'This email address is already registered.';
+        } else if (error.code === 'auth/invalid-email') {
+            statusCode = 400; 
+            errorMessage = 'The provided email address is not valid.';
+        }
+
+        return res.status(statusCode).json({ 
+            status: 'error', 
+            message: errorMessage 
+        });
+    }
+};
+
+/**
+ * @route DELETE /api/doctor/:doctorId
+ * @description Deletes a doctor from Firebase Authentication and their profile from Firestore.
+ * Route Params: doctorId (The Firebase Auth UID of the doctor to delete)
+ * * **NEW FUNCTION ADDED**
+ */
+exports.deleteDoctor = async (req, res) => {
+    // Get the doctorId from the URL parameter
+    const doctorId = req.params.doctorId; 
+
+    if (!doctorId) {
+        return res.status(400).json({
+            status: 'error',
+            message: 'Missing required parameter: doctorId.'
+        });
+    }
+
+    try {
+        // --- 1. Delete Firestore Document ---
+        const firestoreDeleteResult = await db.collection('doctor_user_data').doc(doctorId).delete();
+        console.log(`[AUTH] Firestore document for Doctor ${doctorId} deleted successfully.`);
+
+        // --- 2. Delete Firebase Auth User ---
+        await auth.deleteUser(doctorId);
+        console.log(`[AUTH] Firebase Auth user ${doctorId} deleted successfully.`);
+
+        // --- 3. Success Response ---
+        return res.status(200).json({
+            status: 'success',
+            message: `Doctor with ID ${doctorId} deleted successfully from Auth and Firestore.`,
+            doctorId: doctorId
+        });
+
+    } catch (error) {
+        console.error('[AUTH] Doctor Deletion Error:', error.code, error.message);
+        
+        let statusCode = 500;
+        let errorMessage = 'An unexpected server error occurred during doctor deletion.';
+
+        if (error.code === 'auth/user-not-found') {
+            statusCode = 404;
+            errorMessage = 'No doctor found with the given ID in Firebase Authentication.';
+        }
+
+        // Handle case where Firestore delete failed (e.g., if doc didn't exist)
+        // Note: Firestore delete does not throw a specific error if the document doesn't exist, 
+        // but we handle Auth errors explicitly.
+        
+        return res.status(statusCode).json({
+            status: 'error',
+            message: errorMessage
+        });
+    }
+};
 
 /**
  * @route POST /api/admin/login
