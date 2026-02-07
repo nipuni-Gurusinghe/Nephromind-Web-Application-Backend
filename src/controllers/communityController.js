@@ -292,56 +292,44 @@ exports.getHealthyHabits = async (req, res) => {
         const habits = await HealthyHabit.getHealthyHabits();
         res.status(200).json(habits);
     } catch (error) {
-        console.error("Error in getHealthyHabits controller:", error.message);
-        res.status(500).json({ 
-            message: "Server Error: Could not retrieve healthy habits.", 
-            details: error.message 
-        });
+        res.status(500).json({ message: error.message });
     }
 };
 
 /**
- * @route POST /admin/community/healthy-habits
- * @desc Create a new healthy habit.
- * @access Private/Admin
+ * POST /admin/community/healthy-habits
  */
 exports.createHealthyHabit = async (req, res) => {
-    const habitData = req.body;
-    if (!habitData.title || !habitData.description) {
+    const { title, description } = req.body;
+    
+    // Basic Validation
+    if (!title || !description) {
         return res.status(400).json({ 
-            message: 'Missing required fields: title and description are mandatory.' 
+            message: 'Validation Error: title and description are required.' 
         });
     }
 
     try {
-        const newHabit = await HealthyHabit.createHealthyHabit(habitData);
+        const newHabit = await HealthyHabit.createHealthyHabit(req.body);
         res.status(201).json(newHabit);
-
     } catch (error) {
-        console.error("Error in createHealthyHabit controller:", error.message);
-        res.status(500).json({ 
-            message: "Server Error: Could not create the healthy habit.", 
-            details: error.message 
-        });
+        res.status(500).json({ message: error.message });
     }
 };
 
 /**
- * @route DELETE /admin/community/healthy-habits/:id
- * @desc Delete a healthy habit.
- * @access Private/Admin
+ * DELETE /admin/community/healthy-habits/:id
  */
 exports.deleteHealthyHabit = async (req, res) => {
     try {
         const wasDeleted = await HealthyHabit.deleteHealthyHabit(req.params.id);
-        if (!wasDeleted) return res.status(404).json({ message: 'Healthy Habit not found.' });
+        if (!wasDeleted) {
+            return res.status(404).json({ message: 'Healthy Habit not found.' });
+        }
+        // 204 No Content is standard for successful deletion
         res.status(204).send();
     } catch (error) {
-        console.error("Error in deleteHealthyHabit controller:", error.message);
-        res.status(500).json({ 
-            message: 'Error deleting healthy habit', 
-            details: error.message 
-        });
+        res.status(500).json({ message: error.message });
     }
 };
 
