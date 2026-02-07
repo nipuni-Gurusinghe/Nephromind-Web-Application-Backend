@@ -2,97 +2,104 @@
 
 const admin = require('firebase-admin');
 const db = admin.firestore();
-const COLLECTION_NAME = 'farmerSafetyTips'; // Firestore collection name
+const COLLECTION_NAME = 'farmerSafetyTips';
 
 /**
- * Fetches Farmer Safety Tips from Firestore.
- * (GET /community/farmer-safety)
- * @returns {Promise<Array<object>>} A promise that resolves to an array of tip objects.
+ * Fetches all farmer safety tips from Firestore.
+ * (GET /api/community/farmer-safety)
+ * @returns {Promise<Array<object>>} A promise that resolves to an array of farmer safety tip objects.
  */
 exports.getFarmerSafetyTips = async () => {
-    try {
-        let query = db.collection(COLLECTION_NAME).orderBy('createdAt', 'desc');
-        const snapshot = await query.get();
+  try {
+    const snapshot = await db.collection(COLLECTION_NAME).get();
 
-        if (snapshot.empty) {
-            return [];
-        }
-
-        const tips = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                ...data,
-                // Format Firestore Timestamp fields for consistency
-                createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
-                updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
-            };
-        });
-
-        return tips;
-    } catch (error) {
-        console.error("Error fetching Farmer Safety Tips:", error);
-        throw new Error("Failed to retrieve Farmer Safety Tips from the database.");
+    if (snapshot.empty) {
+      return [];
     }
+
+    const tips = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        title: data.title,
+        content: data.content,
+        slug: data.slug,
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
+        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
+      };
+    });
+
+    return tips;
+  } catch (error) {
+    console.error("Error fetching farmer safety tips:", error);
+    throw new Error("Failed to retrieve farmer safety tips from the database.");
+  }
 };
 
 /**
- * Creates a new Farmer Safety Tip item in the Firestore database.
- * (POST /admin/community/farmer-safety)
- * @param {object} tipData - The data for the new tip (title, content, imageUrl).
- * @returns {Promise<object>} A promise that resolves to the created item object with its ID.
+ * Creates a new farmer safety tip in the Firestore database.
+ * (POST /api/admin/community/farmer-safety)
+ * @param {object} tipData - The data for the new farmer safety tip.
+ * @returns {Promise<object>} A promise that resolves to the created tip object with its ID.
  */
 exports.createFarmerSafetyTip = async (tipData) => {
-    try {
-        // 1. Prepare data with server-side defaults/timestamps
-        const newTipData = {
-            ...tipData,
-            slug: tipData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''), // Generate simple slug
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        };
+  try {
+    const newTip = {
+      title: tipData.title,
+      content: tipData.content,
+      slug: tipData.slug || generateSlug(tipData.title),
+      
+      // Server-side timestamps for record keeping
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
 
-        // 2. Add the document to the collection
-        const docRef = await db.collection(COLLECTION_NAME).add(newTipData);
-
-        // 3. Fetch the created document to return the full object with ID
-        const snapshot = await docRef.get();
-        
-        // 4. Format the output
-        const createdItem = {
-            id: snapshot.id,
-            ...snapshot.data(),
-            createdAt: snapshot.data().createdAt.toDate().toISOString(),
-            updatedAt: snapshot.data().updatedAt.toDate().toISOString(),
-        };
-
-        return createdItem;
-    } catch (error) {
-        console.error("Error creating Farmer Safety Tip:", error);
-        throw new Error("Failed to create the Farmer Safety Tip in the database.");
-    }
+    const docRef = await db.collection(COLLECTION_NAME).add(newTip);
+    const snapshot = await docRef.get();
+    
+    // Convert the timestamp back to an ISO string for the API response
+    const data = snapshot.data();
+    return { 
+      id: snapshot.id, 
+      ...data,
+      createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
+      updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt
+    };
+  } catch (error) {
+    throw new Error("Failed to create farmer safety tip: " + error.message);
+  }
 };
 
 /**
- * Deletes a Farmer Safety Tip item from Firestore by ID.
- * (DELETE /admin/community/farmer-safety/:id)
- * @param {string} id - The ID of the document to delete.
- * @returns {Promise<boolean>} A promise that resolves to true if deleted, false if not found.
+ * Deletes a farmer safety tip by its document ID.
+ * (DELETE /api/admin/community/farmer-safety/:id)
+ * @param {string} tipId - The ID of the farmer safety tip document to delete.
+ * @returns {Promise<boolean>} True if the deletion attempt succeeded.
  */
-exports.deleteFarmerSafetyTip = async (id) => {
-    try {
-        const docRef = db.collection(COLLECTION_NAME).doc(id);
-        const doc = await docRef.get();
-
-        if (!doc.exists) {
-            return false; // Not found
-        }
-
-        await docRef.delete();
-        return true; // Successfully deleted
-
-    } catch (error) {
-        console.error("Error deleting Farmer Safety Tip:", error);
-        throw new Error("Failed to delete the Farmer Safety Tip from the database.");
+exports.deleteFarmerSafetyTip = async (tipId) => {
+  try {
+    const docRef = db.collection(COLLECTION_NAME).doc(tipId);
+    const doc = await docRef.get();
+    
+    if (!doc.exists) {
+      throw new Error("Farmer Safety Tip not found");
     }
+    
+    await docRef.delete();
+    return true;
+  } catch (error) {
+    throw error;
+  }
 };
+
+/**
+ * Helper function to generate a URL-friendly slug from a title
+ * @param {string} title - The title to convert to a slug
+ * @returns {string} A URL-friendly slug
+ */
+function generateSlug(title) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
