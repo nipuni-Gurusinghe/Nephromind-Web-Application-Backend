@@ -2,8 +2,7 @@
 
 const admin = require('firebase-admin');
 const db = admin.firestore();
-const COLLECTION_NAME = 'communityFAQs'; // Firestore collection name
-
+const COLLECTION_NAME = 'faqs';
 /**
  * Fetches Community FAQs from Firestore.
  * (GET /community/faq)
@@ -44,53 +43,39 @@ exports.getFAQs = async () => {
  */
 exports.createFAQ = async (faqData) => {
     try {
-        // 1. Prepare data with server-side defaults/timestamps
         const newFAQData = {
             ...faqData,
-            slug: faqData.question.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''), // Generate simple slug
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         };
 
-        // 2. Add the document to the collection
+        // This will now point to the collection visible in your screenshot
         const docRef = await db.collection(COLLECTION_NAME).add(newFAQData);
-
-        // 3. Fetch the created document to return the full object with ID
         const snapshot = await docRef.get();
         
-        // 4. Format the output
-        const createdItem = {
+        return {
             id: snapshot.id,
             ...snapshot.data(),
             createdAt: snapshot.data().createdAt.toDate().toISOString(),
             updatedAt: snapshot.data().updatedAt.toDate().toISOString(),
         };
-
-        return createdItem;
     } catch (error) {
-        console.error("Error creating FAQ:", error);
-        throw new Error("Failed to create the FAQ in the database.");
+        throw new Error("Failed to create the FAQ: " + error.message);
     }
 };
 
 /**
- * Deletes an FAQ item from Firestore by ID.
- * (DELETE /admin/community/faq/:id)
- * @param {string} id - The ID of the document to delete.
- * @returns {Promise<boolean>} A promise that resolves to true if deleted, false if not found.
+ * Deletes an FAQ item (DELETE /admin/community/faq/:id)
  */
 exports.deleteFAQ = async (id) => {
     try {
         const docRef = db.collection(COLLECTION_NAME).doc(id);
         const doc = await docRef.get();
 
-        if (!doc.exists) {
-            return false; // Not found
-        }
+        if (!doc.exists) return false;
 
         await docRef.delete();
-        return true; // Successfully deleted
-
+        return true;
     } catch (error) {
         console.error("Error deleting FAQ:", error);
         throw new Error("Failed to delete the FAQ from the database.");

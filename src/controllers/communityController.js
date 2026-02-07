@@ -44,24 +44,18 @@ exports.getCommunityEvents = async (req, res) => {
  * @access Protected
  */
 exports.createCommunityEvent = async (req, res) => {
-    const eventData = req.body;
-    if (!eventData.title || !eventData.date || !eventData.location) {
-        return res.status(400).json({ 
-            message: 'Missing required fields: title, date, and location are mandatory.' 
-        });
+    const { title, date, location } = req.body;
+    
+    // Validation
+    if (!title || !date || !location) {
+        return res.status(400).json({ message: 'Title, Date, and Location are required.' });
     }
 
     try {
-        // Calls the Firebase logic in CommunityEvent.js
-        const newEvent = await CommunityEvent.createEvent(eventData); 
+        const newEvent = await CommunityEvent.createEvent(req.body);
         res.status(201).json(newEvent);
-
     } catch (error) {
-        console.error("Error in createCommunityEvent controller:", error.message);
-        res.status(500).json({ 
-            message: "Server Error: Could not create the community event.", 
-            details: error.message 
-        });
+        res.status(500).json({ message: 'Error creating event', error: error.message });
     }
 };
 
@@ -72,14 +66,12 @@ exports.createCommunityEvent = async (req, res) => {
  */
 exports.deleteCommunityEvent = async (req, res) => {
     try {
-        const wasDeleted = await CommunityEvent.deleteEvent(req.params.id); 
-        if (!wasDeleted) return res.status(404).json({ message: 'Event not found.' });
+        await CommunityEvent.deleteEvent(req.params.id);
         res.status(204).send();
     } catch (error) {
-        res.status(500).json({ message: 'Error deleting event', details: error.message });
+        res.status(error.message === "Event not found" ? 404 : 500).json({ message: error.message });
     }
 };
-
 
 // ----------------------------------------------------------------------
 //                        MULTIMEDIA HANDLERS (FIREBASE IMPLEMENTATION)
@@ -118,27 +110,20 @@ exports.getMultimedia = async (req, res) => {
  * @access Private/Admin
  */
 exports.createMultimedia = async (req, res) => {
-    const multimediaData = req.body;
+    const { title, type, url, category } = req.body;
     
-    // Basic validation
-    if (!multimediaData.title || !multimediaData.description || !multimediaData.type || !multimediaData.url) {
+    // Validation based on your database schema
+    if (!title || !type || !url || !category) {
         return res.status(400).json({ 
-            message: 'Missing required fields: title, description, type, and url are mandatory.' 
+            message: 'Missing required fields: title, type, url, and category are mandatory.' 
         });
     }
 
     try {
-        // Calls the Firebase logic in Multimedia.js
-        const savedItem = await Multimedia.createMultimedia(multimediaData);
-
+        const savedItem = await Multimedia.createMultimedia(req.body);
         res.status(201).json(savedItem);
-
     } catch (error) {
-        console.error('Error creating multimedia:', error);
-        res.status(500).json({ 
-            message: 'Server error creating multimedia content', 
-            details: error.message 
-        });
+        res.status(500).json({ message: 'Error creating multimedia content', details: error.message });
     }
 };
 
@@ -149,23 +134,13 @@ exports.createMultimedia = async (req, res) => {
  */
 exports.deleteMultimedia = async (req, res) => {
     try {
-        const { id } = req.params;
-
-        // Calls the Firebase logic in Multimedia.js
-        const wasDeleted = await Multimedia.deleteMultimedia(id);
-
+        const wasDeleted = await Multimedia.deleteMultimedia(req.params.id);
         if (!wasDeleted) {
             return res.status(404).json({ message: 'Multimedia item not found.' });
         }
-
-        res.status(204).send(); 
-
+        res.status(204).send(); // Success, no content
     } catch (error) {
-        console.error('Error deleting multimedia:', error);
-        res.status(500).json({ 
-            message: 'Server error deleting multimedia content', 
-            details: error.message 
-        });
+        res.status(500).json({ message: 'Error deleting multimedia content', details: error.message });
     }
 };
 
@@ -398,23 +373,20 @@ exports.getFAQs = async (req, res) => {
  * @access Private/Admin
  */
 exports.createFAQ = async (req, res) => {
-    const faqData = req.body;
-    if (!faqData.question || !faqData.answer) {
+    const { question, answer, category } = req.body;
+    
+    // Basic validation
+    if (!question || !answer || !category) {
         return res.status(400).json({ 
-            message: 'Missing required fields: question and answer are mandatory.' 
+            message: 'Missing required fields: question, answer, and category are mandatory.' 
         });
     }
 
     try {
-        const newFAQ = await CommunityFAQ.createFAQ(faqData);
+        const newFAQ = await CommunityFAQ.createFAQ(req.body);
         res.status(201).json(newFAQ);
-
     } catch (error) {
-        console.error("Error in createFAQ controller:", error.message);
-        res.status(500).json({ 
-            message: "Server Error: Could not create the FAQ.", 
-            details: error.message 
-        });
+        res.status(500).json({ message: "Server Error", details: error.message });
     }
 };
 
@@ -426,13 +398,11 @@ exports.createFAQ = async (req, res) => {
 exports.deleteFAQ = async (req, res) => {
     try {
         const wasDeleted = await CommunityFAQ.deleteFAQ(req.params.id);
-        if (!wasDeleted) return res.status(404).json({ message: 'FAQ not found.' });
-        res.status(204).send();
+        if (!wasDeleted) {
+            return res.status(404).json({ message: 'FAQ not found.' });
+        }
+        res.status(204).send(); // Success, no content
     } catch (error) {
-        console.error("Error in deleteFAQ controller:", error.message);
-        res.status(500).json({ 
-            message: 'Error deleting FAQ', 
-            details: error.message 
-        });
+        res.status(500).json({ message: 'Error deleting FAQ', details: error.message });
     }
 };

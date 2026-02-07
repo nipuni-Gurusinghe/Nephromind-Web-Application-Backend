@@ -75,33 +75,25 @@ exports.getMultimedia = async (filters) => {
  */
 exports.createMultimedia = async (multimediaData) => {
     try {
-        // 1. Prepare data with server-side defaults/timestamps
         const newMultimediaData = {
             ...multimediaData,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            plays: Number(multimediaData.plays || 0),
+            plays: Number(multimediaData.plays || 0), // Ensure numerical field
             isActive: multimediaData.isActive === undefined ? true : multimediaData.isActive,
         };
 
-        // 2. Add the document to the 'multimedia' collection
         const docRef = await db.collection(COLLECTION_NAME).add(newMultimediaData);
-
-        // 3. Fetch the created document to return the full object with ID
         const snapshot = await docRef.get();
         
-        // 4. Format the output
-        const createdItem = {
+        return {
             id: snapshot.id,
             ...snapshot.data(),
             createdAt: snapshot.data().createdAt.toDate().toISOString(),
             updatedAt: snapshot.data().updatedAt.toDate().toISOString(),
         };
-
-        return createdItem;
     } catch (error) {
-        console.error("Error creating multimedia item:", error);
-        throw new Error("Failed to create the multimedia item in the database.");
+        throw new Error("Failed to create the multimedia item.");
     }
 };
 
@@ -115,17 +107,12 @@ exports.deleteMultimedia = async (id) => {
     try {
         const docRef = db.collection(COLLECTION_NAME).doc(id);
         const doc = await docRef.get();
-
-        if (!doc.exists) {
-            return false; // Not found
-        }
+        if (!doc.exists) return false;
 
         await docRef.delete();
-        return true; // Successfully deleted
-
+        return true;
     } catch (error) {
-        console.error("Error deleting multimedia item:", error);
-        throw new Error("Failed to delete the multimedia item from the database.");
+        throw new Error("Failed to delete the multimedia item.");
     }
 };
 

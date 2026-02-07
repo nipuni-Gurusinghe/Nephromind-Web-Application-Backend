@@ -1,74 +1,51 @@
-// src/routes/communityRoutes.js
-
 const express = require('express');
 const router = express.Router();
-
-// Import all necessary controller functions using destructuring
-const {
-    // Event Handlers
-    getCommunityEvents,
-    createCommunityEvent,
-    deleteCommunityEvent,
-    
-    // Multimedia Handlers
-    getMultimedia,
-    createMultimedia,
-    deleteMultimedia,
-
-    // Safe Water Guide Handlers
-    getSafeWaterGuides, 
-    createSafeWaterGuide, 
-    deleteSafeWaterGuide, 
-    
-    // Farmer Safety Tip Handlers
-    getFarmerSafetyTips, 
-    createFarmerSafetyTip, 
-    deleteFarmerSafetyTip,
-
-    // Healthy Habit Handlers
-    getHealthyHabits, 
-    createHealthyHabit, 
-    deleteHealthyHabit, 
-
-    // Community FAQ Handlers 
-    getFAQs, // <-- Implemented
-    createFAQ, // <-- Implemented
-    deleteFAQ // <-- Implemented
-
-} = require('../controllers/communityController'); 
+const communityController = require('../controllers/communityController');
 
 // ---------------------------------------------------------------------
 // --- PUBLIC VIEW ENDPOINTS (Base path: /community/...) ---------------
 // ---------------------------------------------------------------------
 
-router.get('/event', getCommunityEvents);
-router.get('/multimedia', getMultimedia);
-router.get('/faq', getFAQs); // <-- GET Route
-router.get('/safe-water-guide', getSafeWaterGuides); 
-router.get('/farmer-safety', getFarmerSafetyTips); 
-router.get('/healthy-habits', getHealthyHabits); 
+// Community Events
+router.get('/event', communityController.getCommunityEvents);
+
+// Multimedia Content
+router.get('/multimedia', communityController.getMultimedia);
+
+// FAQ Section
+router.get('/faq', communityController.getFAQs);
+
+// Resource Guides
+router.get('/safe-water-guide', communityController.getSafeWaterGuides); 
+router.get('/farmer-safety', communityController.getFarmerSafetyTips); 
+router.get('/healthy-habits', communityController.getHealthyHabits); 
 
 
 // ---------------------------------------------------------------------
 // --- ADMIN MANAGEMENT ENDPOINTS (Base path: /admin/community/...) ----
 // ---------------------------------------------------------------------
 
+/**
+ * NOTE: If you have authentication middleware (e.g., verifyToken), 
+ * apply it here to protect these routes.
+ */
+
 // --- POST (Creation) Routes ---
-router.post('/event', createCommunityEvent); 
-router.post('/multimedia', createMultimedia);
-router.post('/faq', createFAQ); // <-- POST Route
-router.post('/safe-water-guide', createSafeWaterGuide);
-router.post('/farmer-safety', createFarmerSafetyTip); 
-router.post('/healthy-habits', createHealthyHabit);
+router.post('/event', communityController.createCommunityEvent); 
+router.post('/multimedia', communityController.createMultimedia);
+router.post('/faq', communityController.createFAQ);
+router.post('/safe-water-guide', communityController.createSafeWaterGuide);
+router.post('/farmer-safety', communityController.createFarmerSafetyTip); 
+router.post('/healthy-habits', communityController.createHealthyHabit);
 
 
 // --- DELETE Routes ---
-router.delete('/event/:id', deleteCommunityEvent);
-router.delete('/multimedia/:id', deleteMultimedia);
-router.delete('/faq/:id', deleteFAQ); // <-- DELETE Route
-router.delete('/safe-water-guide/:id', deleteSafeWaterGuide);
-router.delete('/farmer-safety/:id', deleteFarmerSafetyTip); 
-router.delete('/healthy-habits/:id', deleteHealthyHabit); 
+router.delete('/event/:id', communityController.deleteCommunityEvent);
+router.delete('/multimedia/:id', communityController.deleteMultimedia);
+router.delete('/faq/:id', communityController.deleteFAQ);
+router.delete('/safe-water-guide/:id', communityController.deleteSafeWaterGuide);
+router.delete('/farmer-safety/:id', communityController.deleteFarmerSafetyTip); 
+router.delete('/healthy-habits/:id', communityController.deleteHealthyHabit); 
 
 
 module.exports = router;
