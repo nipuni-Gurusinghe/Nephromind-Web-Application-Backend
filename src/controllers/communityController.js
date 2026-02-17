@@ -11,7 +11,27 @@ const SafeWaterGuide = require('../models/SafeWaterGuide');
 // ----------------------------------------------------------------------
 //                        COMMUNITY EVENT HANDLERS (FIREBASE IMPLEMENTATION)
 // ----------------------------------------------------------------------
+// Check the name here!
+exports.getAllEvents = async (req, res) => {
+    try {
+        const { isActive, type } = req.query;
+        
+        const filters = {};
+        if (isActive !== undefined) filters.isActive = isActive;
+        if (type) filters.type = type;
 
+        // Calls the Firebase logic in CommunityEvent.js
+        const events = await CommunityEvent.getEvents(filters); 
+        res.status(200).json(events);
+
+    } catch (error) {
+        console.error("Error in getCommunityEvents controller:", error.message);
+        res.status(500).json({ 
+            message: "Server Error: Could not retrieve community events.", 
+            details: error.message 
+        });
+    }
+};
 /**
  * @route GET /community/event
  * @desc Get a list of community events.

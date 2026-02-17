@@ -315,3 +315,65 @@ exports.loginAdmin = async (req, res) => {
     });
   }
 };
+
+/**
+ * @route POST /api/admin/doctor/login
+ * @description Generates a custom token for a doctor user.
+ * Request Body: { email, password }
+ */
+exports.loginDoctor = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Missing required fields: email and password.'
+    });
+  }
+
+  try {
+    // 1. Get User from Firebase Auth
+    const userRecord = await auth.getUserByEmail(email);
+    const userId = userRecord.uid;
+
+    // 2. Get Doctor Data from Firestore
+    const doctorDoc = await db.collection('doctor_user_data').doc(userId).get();
+
+    if (!doctorDoc.exists) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Doctor profile not found.'
+      });
+    }
+
+    // 3. Security Check (Plain text check as per your current pattern)
+    if (doctorDoc.data().password !== password) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid credentials. Access denied.'
+      });
+    }
+
+    // 4. Check for Doctor Claim
+    if (!userRecord.customClaims || userRecord.customClaims.doctor !== true) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Authorization failed. You are not registered as a Doctor.'
+      });
+    }
+
+    // 5. Generate Custom Token
+    const customToken = await auth.createCustomToken(userId, { doctor: true });
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Doctor login successful.',
+      customToken: customToken,
+      uid: userId
+    });
+
+  } catch (error) {
+    console.error('[AUTH] Doctor Login Error:', error);
+    return res.status(500).json({ status: 'error', message: 'Server error during login.' });
+  }
+};

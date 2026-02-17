@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
-// NOTE: You will need to create the corresponding controller file: doctorController.js
-// const doctorController = require('../controllers/doctorController');
+const communityController = require('../controllers/communityController');
 
-// --- DOCTOR MANAGEMENT ENDPOINTS (/admin/doctor/...) ---
-// POST /admin/doctor (Add doctor)
-router.post('/', (req, res) => res.status(501).json({ message: "POST /admin/doctor endpoint not yet implemented." }));
+// --- DOCTOR ENDPOINTS ---
 
-// DELETE /admin/doctor/:id (Delete doctor)
-router.delete('/:id', (req, res) => res.status(501).json({ message: "DELETE /admin/doctor/:id endpoint not yet implemented." }));
+/** * This is where the error was triggered. 
+ * We must ensure communityController.getAllEvents exists.
+ */
+router.get('/community/event', communityController.getAllEvents);
 
 module.exports = router;
