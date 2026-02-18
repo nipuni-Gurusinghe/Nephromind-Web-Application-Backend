@@ -1,12 +1,7 @@
-// nephromind-admin-backend/src/models/HealthyHabit.js
 
 const admin = require('firebase-admin');
 const db = admin.firestore();
 const COLLECTION_NAME = 'healthyHabits';
-
-/**
- * Helper to format Firestore Timestamps to ISO strings
- */
 const formatDoc = (doc) => {
     const data = doc.data();
     return {
@@ -16,10 +11,6 @@ const formatDoc = (doc) => {
         updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
     };
 };
-
-/**
- * READ all Healthy Habits
- */
 exports.getHealthyHabits = async () => {
     try {
         const snapshot = await db.collection(COLLECTION_NAME).orderBy('createdAt', 'desc').get();
@@ -31,14 +22,10 @@ exports.getHealthyHabits = async () => {
     }
 };
 
-/**
- * CREATE a new Healthy Habit
- */
 exports.createHealthyHabit = async (habitData) => {
     try {
         const newHabitData = {
             ...habitData,
-            // Generate slug: "Drink Water" -> "drink-water"
             slug: habitData.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -52,10 +39,6 @@ exports.createHealthyHabit = async (habitData) => {
         throw new Error("Failed to create the Healthy Habit.");
     }
 };
-
-/**
- * DELETE a Healthy Habit
- */
 exports.deleteHealthyHabit = async (id) => {
     try {
         const docRef = db.collection(COLLECTION_NAME).doc(id);

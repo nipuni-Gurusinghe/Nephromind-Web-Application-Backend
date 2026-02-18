@@ -1,13 +1,13 @@
-// nephromind-admin-backend/src/models/SafeWaterGuide.js
+
 
 const admin = require('firebase-admin');
 const db = admin.firestore();
-const COLLECTION_NAME = 'safeWaterGuides'; // Firestore collection name
+const COLLECTION_NAME = 'safeWaterGuides';
 
 /**
  * Fetches Safe Water Guides from Firestore.
  * (GET /community/safe-water-guide)
- * @returns {Promise<Array<object>>} A promise that resolves to an array of guide objects.
+ * @returns {Promise<Array<object>>} 
  */
 exports.getSafeWaterGuides = async () => {
     try {
@@ -23,7 +23,6 @@ exports.getSafeWaterGuides = async () => {
             return {
                 id: doc.id,
                 ...data,
-                // Format Firestore Timestamp fields for consistency
                 createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
                 updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
             };
@@ -37,28 +36,21 @@ exports.getSafeWaterGuides = async () => {
 };
 
 /**
- * Creates a new Safe Water Guide item in the Firestore database.
+ 
  * (POST /admin/community/safe-water-guide)
  * @param {object} guideData - The data for the new guide (title, content, imageUrl).
- * @returns {Promise<object>} A promise that resolves to the created item object with its ID.
+ * @returns {Promise<object>}
  */
 exports.createSafeWaterGuide = async (guideData) => {
     try {
-        // 1. Prepare data with server-side defaults/timestamps
         const newGuideData = {
             ...guideData,
             slug: guideData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''), // Generate simple slug
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         };
-
-        // 2. Add the document to the collection
         const docRef = await db.collection(COLLECTION_NAME).add(newGuideData);
-
-        // 3. Fetch the created document to return the full object with ID
         const snapshot = await docRef.get();
-        
-        // 4. Format the output
         const createdItem = {
             id: snapshot.id,
             ...snapshot.data(),
@@ -77,7 +69,7 @@ exports.createSafeWaterGuide = async (guideData) => {
  * Deletes a Safe Water Guide item from Firestore by ID.
  * (DELETE /admin/community/safe-water-guide/:id)
  * @param {string} id - The ID of the document to delete.
- * @returns {Promise<boolean>} A promise that resolves to true if deleted, false if not found.
+ * @returns {Promise<boolean>} 
  */
 exports.deleteSafeWaterGuide = async (id) => {
     try {
@@ -85,11 +77,11 @@ exports.deleteSafeWaterGuide = async (id) => {
         const doc = await docRef.get();
 
         if (!doc.exists) {
-            return false; // Not found
+            return false; 
         }
 
         await docRef.delete();
-        return true; // Successfully deleted
+        return true; 
 
     } catch (error) {
         console.error("Error deleting Safe Water Guide:", error);

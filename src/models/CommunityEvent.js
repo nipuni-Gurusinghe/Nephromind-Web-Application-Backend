@@ -1,4 +1,3 @@
-// nephromind-admin-backend/src/models/CommunityEvent.js
 
 const admin = require('firebase-admin');
 const db = admin.firestore();
@@ -7,22 +6,18 @@ const COLLECTION_NAME = 'events';
 /**
  * Fetches community events from Firestore based on query parameters.
  * (GET /api/community/events)
- * @param {object} filters - The query parameters from the request.
- * @param {string} [filters.isActive] - Filter by 'true' or 'false' status.
- * @param {string} [filters.type] - Filter by event type (e.g., 'Community Event').
- * @returns {Promise<Array<object>>} A promise that resolves to an array of event objects.
+ * @param {object} filters 
+ * @param {string} [filters.isActive] 
+ * @param {string} [filters.type] 
+ * @returns {Promise<Array<object>>} 
  */
 exports.getEvents = async (filters) => {
   try {
     let query = db.collection(COLLECTION_NAME);
-
-    // Filter by isActive (boolean)
     if (filters.isActive !== undefined) {
       const isActiveBool = filters.isActive === 'true';
       query = query.where('isActive', '==', isActiveBool);
     }
-
-    // Filter by type (string)
     if (filters.type) {
       query = query.where('type', '==', filters.type);
     }
@@ -69,8 +64,6 @@ exports.createEvent = async (eventData) => {
     const newEvent = {
       title: eventData.title,
       description: eventData.description,
-      
-      // Convert incoming string (e.g., "2026-03-15") into a Firestore Timestamp
       date: eventData.date ? admin.firestore.Timestamp.fromDate(new Date(eventData.date)) : null,
       
       time: eventData.time,
@@ -80,16 +73,12 @@ exports.createEvent = async (eventData) => {
       maxCapacity: Number(eventData.maxCapacity || 0),
       registeredCount: Number(eventData.registeredCount || 0),
       isActive: eventData.isActive ?? true,
-      
-      // Server-side timestamps for record keeping
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     };
 
     const docRef = await db.collection(COLLECTION_NAME).add(newEvent);
     const snapshot = await docRef.get();
-    
-    // Convert the timestamp back to an ISO string for the API response
     const data = snapshot.data();
     return { 
       id: snapshot.id, 

@@ -1,4 +1,3 @@
-// nephromind-admin-backend/src/models/CommunityFAQ.js
 
 const admin = require('firebase-admin');
 const db = admin.firestore();
@@ -6,7 +5,7 @@ const COLLECTION_NAME = 'faqs';
 /**
  * Fetches Community FAQs from Firestore.
  * (GET /community/faq)
- * @returns {Promise<Array<object>>} A promise that resolves to an array of FAQ objects.
+ * @returns {Promise<Array<object>>} 
  */
 exports.getFAQs = async () => {
     try {
@@ -22,7 +21,6 @@ exports.getFAQs = async () => {
             return {
                 id: doc.id,
                 ...data,
-                // Format Firestore Timestamp fields for consistency
                 createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
                 updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
             };
@@ -38,8 +36,8 @@ exports.getFAQs = async () => {
 /**
  * Creates a new FAQ item in the Firestore database.
  * (POST /admin/community/faq)
- * @param {object} faqData - The data for the new FAQ (question, answer, category).
- * @returns {Promise<object>} A promise that resolves to the created item object with its ID.
+ * @param {object} faqData 
+ * @returns {Promise<object>} 
  */
 exports.createFAQ = async (faqData) => {
     try {
@@ -49,7 +47,6 @@ exports.createFAQ = async (faqData) => {
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         };
 
-        // This will now point to the collection visible in your screenshot
         const docRef = await db.collection(COLLECTION_NAME).add(newFAQData);
         const snapshot = await docRef.get();
         
@@ -64,9 +61,6 @@ exports.createFAQ = async (faqData) => {
     }
 };
 
-/**
- * Deletes an FAQ item (DELETE /admin/community/faq/:id)
- */
 exports.deleteFAQ = async (id) => {
     try {
         const docRef = db.collection(COLLECTION_NAME).doc(id);

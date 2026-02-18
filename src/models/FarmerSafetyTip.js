@@ -1,4 +1,3 @@
-// nephromind-admin-backend/src/models/FarmerSafetyTip.js
 
 const admin = require('firebase-admin');
 const db = admin.firestore();
@@ -7,7 +6,7 @@ const COLLECTION_NAME = 'farmerSafetyTips';
 /**
  * Fetches all farmer safety tips from Firestore.
  * (GET /api/community/farmer-safety)
- * @returns {Promise<Array<object>>} A promise that resolves to an array of farmer safety tip objects.
+ * @returns {Promise<Array<object>>} 
  */
 exports.getFarmerSafetyTips = async () => {
   try {
@@ -40,7 +39,7 @@ exports.getFarmerSafetyTips = async () => {
  * Creates a new farmer safety tip in the Firestore database.
  * (POST /api/admin/community/farmer-safety)
  * @param {object} tipData - The data for the new farmer safety tip.
- * @returns {Promise<object>} A promise that resolves to the created tip object with its ID.
+ * @returns {Promise<object>} 
  */
 exports.createFarmerSafetyTip = async (tipData) => {
   try {
@@ -48,16 +47,12 @@ exports.createFarmerSafetyTip = async (tipData) => {
       title: tipData.title,
       content: tipData.content,
       slug: tipData.slug || generateSlug(tipData.title),
-      
-      // Server-side timestamps for record keeping
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     };
 
     const docRef = await db.collection(COLLECTION_NAME).add(newTip);
     const snapshot = await docRef.get();
-    
-    // Convert the timestamp back to an ISO string for the API response
     const data = snapshot.data();
     return { 
       id: snapshot.id, 

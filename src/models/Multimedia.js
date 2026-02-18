@@ -1,13 +1,7 @@
-// nephromind-admin-backend/src/models/Multimedia.js
 
 const admin = require('firebase-admin');
-// NOTE: Assuming your 'admin' object is initialized globally or handled elsewhere.
-// If it's initialized in src/config/index.js, you might need to adjust the import path 
-// or ensure this file gets the initialized admin object.
-// Based on your CommunityEvent.js, we assume 'admin' is available here.
-
 const db = admin.firestore();
-const COLLECTION_NAME = 'multimedia'; // The name of your Firestore collection for multimedia
+const COLLECTION_NAME = 'multimedia'; 
 
 /**
  * Fetches multimedia items from Firestore based on query parameters.
@@ -20,27 +14,19 @@ const COLLECTION_NAME = 'multimedia'; // The name of your Firestore collection f
 exports.getMultimedia = async (filters) => {
     try {
         let query = db.collection(COLLECTION_NAME);
-
-        // Filter by isActive (boolean)
         if (filters.isActive !== undefined) {
             const isActiveBool = filters.isActive === 'true';
             query = query.where('isActive', '==', isActiveBool);
         } else {
-             // Default to showing only active items if not specified
              query = query.where('isActive', '==', true); 
         }
-
-        // Filter by type (string)
         if (filters.type) {
             query = query.where('type', '==', filters.type);
         }
         
-        // Filter by category (string)
         if (filters.category) {
             query = query.where('category', '==', filters.category);
         }
-        
-        // Order by creation date descending
         query = query.orderBy('createdAt', 'desc'); 
 
         const snapshot = await query.get();
@@ -54,7 +40,6 @@ exports.getMultimedia = async (filters) => {
             return {
                 id: doc.id,
                 ...data,
-                // Format Firestore Timestamp fields for consistency
                 createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
                 updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
             };
@@ -71,7 +56,7 @@ exports.getMultimedia = async (filters) => {
  * Creates a new multimedia item in the Firestore database.
  * (POST /admin/community/multimedia)
  * @param {object} multimediaData - The data for the new item.
- * @returns {Promise<object>} A promise that resolves to the created item object with its ID.
+ * @returns {Promise<object>}
  */
 exports.createMultimedia = async (multimediaData) => {
     try {
@@ -79,7 +64,7 @@ exports.createMultimedia = async (multimediaData) => {
             ...multimediaData,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            plays: Number(multimediaData.plays || 0), // Ensure numerical field
+            plays: Number(multimediaData.plays || 0), 
             isActive: multimediaData.isActive === undefined ? true : multimediaData.isActive,
         };
 
@@ -101,7 +86,7 @@ exports.createMultimedia = async (multimediaData) => {
  * Deletes a multimedia item from Firestore by ID.
  * (DELETE /admin/community/multimedia/:id)
  * @param {string} id - The ID of the document to delete.
- * @returns {Promise<boolean>} A promise that resolves to true if deleted, false if not found.
+ * @returns {Promise<boolean>} 
  */
 exports.deleteMultimedia = async (id) => {
     try {
@@ -115,6 +100,4 @@ exports.deleteMultimedia = async (id) => {
         throw new Error("Failed to delete the multimedia item.");
     }
 };
-
-// Export the collection name for use in other files if needed
 exports.COLLECTION_NAME = COLLECTION_NAME;

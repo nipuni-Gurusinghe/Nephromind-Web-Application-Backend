@@ -1,17 +1,11 @@
-// nephromind-admin-backend/src/controllers/communityController.js
 
-// Import all required Firebase Model utilities
-const CommunityEvent = require('../models/CommunityEvent');          
-const Multimedia = require('../models/Multimedia');          
-const CommunityFAQ = require('../models/CommunityFAQ'); // <-- FULLY IMPLEMENTED
+const CommunityEvent = require('../models/CommunityEvent');
+const Multimedia = require('../models/Multimedia'); 
+const CommunityFAQ = require('../models/CommunityFAQ'); 
 const FarmerSafetyTip = require('../models/FarmerSafetyTip'); 
-const HealthyHabit = require('../models/HealthyHabit');       
+const HealthyHabit = require('../models/HealthyHabit'); 
 const SafeWaterGuide = require('../models/SafeWaterGuide');
 
-// ----------------------------------------------------------------------
-//                        COMMUNITY EVENT HANDLERS (FIREBASE IMPLEMENTATION)
-// ----------------------------------------------------------------------
-// Check the name here!
 exports.getAllEvents = async (req, res) => {
     try {
         const { isActive, type } = req.query;
@@ -19,8 +13,6 @@ exports.getAllEvents = async (req, res) => {
         const filters = {};
         if (isActive !== undefined) filters.isActive = isActive;
         if (type) filters.type = type;
-
-        // Calls the Firebase logic in CommunityEvent.js
         const events = await CommunityEvent.getEvents(filters); 
         res.status(200).json(events);
 
@@ -44,8 +36,6 @@ exports.getCommunityEvents = async (req, res) => {
         const filters = {};
         if (isActive !== undefined) filters.isActive = isActive;
         if (type) filters.type = type;
-
-        // Calls the Firebase logic in CommunityEvent.js
         const events = await CommunityEvent.getEvents(filters); 
         res.status(200).json(events);
 
@@ -65,8 +55,6 @@ exports.getCommunityEvents = async (req, res) => {
  */
 exports.createCommunityEvent = async (req, res) => {
     const { title, date, location } = req.body;
-    
-    // Validation
     if (!title || !date || !location) {
         return res.status(400).json({ message: 'Title, Date, and Location are required.' });
     }
@@ -93,10 +81,6 @@ exports.deleteCommunityEvent = async (req, res) => {
     }
 };
 
-// ----------------------------------------------------------------------
-//                        MULTIMEDIA HANDLERS (FIREBASE IMPLEMENTATION)
-// ----------------------------------------------------------------------
-
 /**
  * @route GET /community/multimedia
  * @desc Get all multimedia items.
@@ -110,8 +94,6 @@ exports.getMultimedia = async (req, res) => {
         if (category) filters.category = category;
         if (type) filters.type = type;
         if (isActive !== undefined) filters.isActive = isActive;
-
-        // Calls the Firebase logic in Multimedia.js
         const multimediaItems = await Multimedia.getMultimedia(filters);
 
         res.status(200).json(multimediaItems);
@@ -131,8 +113,6 @@ exports.getMultimedia = async (req, res) => {
  */
 exports.createMultimedia = async (req, res) => {
     const { title, type, url, category } = req.body;
-    
-    // Validation based on your database schema
     if (!title || !type || !url || !category) {
         return res.status(400).json({ 
             message: 'Missing required fields: title, type, url, and category are mandatory.' 
@@ -158,15 +138,12 @@ exports.deleteMultimedia = async (req, res) => {
         if (!wasDeleted) {
             return res.status(404).json({ message: 'Multimedia item not found.' });
         }
-        res.status(204).send(); // Success, no content
+        res.status(204).send(); 
     } catch (error) {
         res.status(500).json({ message: 'Error deleting multimedia content', details: error.message });
     }
 };
 
-// ----------------------------------------------------------------------
-//                        SAFE WATER GUIDE HANDLERS (FIREBASE IMPLEMENTATION)
-// ----------------------------------------------------------------------
 
 /**
  * @route GET /community/safe-water-guide
@@ -231,9 +208,6 @@ exports.deleteSafeWaterGuide = async (req, res) => {
     }
 };
 
-// ----------------------------------------------------------------------
-//                        FARMER SAFETY TIPS HANDLERS (FIREBASE IMPLEMENTATION)
-// ----------------------------------------------------------------------
 
 /**
  * @route GET /community/farmer-safety
@@ -298,9 +272,6 @@ exports.deleteFarmerSafetyTip = async (req, res) => {
     }
 };
 
-// ----------------------------------------------------------------------
-//                        HEALTHY HABITS HANDLERS (FIREBASE IMPLEMENTATION)
-// ----------------------------------------------------------------------
 
 /**
  * @route GET /community/healthy-habits
@@ -353,9 +324,6 @@ exports.deleteHealthyHabit = async (req, res) => {
     }
 };
 
-// ----------------------------------------------------------------------
-//                        COMMUNITY FAQ HANDLERS (FIREBASE IMPLEMENTATION)
-// ----------------------------------------------------------------------
 
 /**
  * @route GET /community/faq
@@ -409,7 +377,7 @@ exports.deleteFAQ = async (req, res) => {
         if (!wasDeleted) {
             return res.status(404).json({ message: 'FAQ not found.' });
         }
-        res.status(204).send(); // Success, no content
+        res.status(204).send(); 
     } catch (error) {
         res.status(500).json({ message: 'Error deleting FAQ', details: error.message });
     }
