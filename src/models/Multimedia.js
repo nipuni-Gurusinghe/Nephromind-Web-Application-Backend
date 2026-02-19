@@ -51,7 +51,21 @@ exports.getMultimedia = async (filters) => {
         throw new Error("Failed to retrieve multimedia items from the database.");
     }
 };
-
+// Ensure this name matches the one used in doctorRoutes.js
+exports.getAllMultimedia = async (req, res) => {
+    try {
+        // Example logic to fetch from Firestore
+        const snapshot = await db.collection('multimedia').get();
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        res.status(200).json({
+            status: 'success',
+            data: data
+        });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
 /**
  * Creates a new multimedia item in the Firestore database.
  * (POST /admin/community/multimedia)
