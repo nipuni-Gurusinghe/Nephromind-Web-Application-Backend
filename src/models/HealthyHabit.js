@@ -53,3 +53,24 @@ exports.deleteHealthyHabit = async (id) => {
         throw new Error("Failed to delete the Healthy Habit.");
     }
 };
+/**
+ * Express Handler to allow Doctors to view Healthy Habits.
+ * (GET /api/admin/doctor/community/healthy-habits)
+ */
+exports.getHealthyHabitsHandler = async (req, res) => {
+  try {
+    // Assuming you have a function named getHealthyHabits defined in this file
+    const habits = await exports.getHealthyHabits(); 
+    
+    return res.status(200).json({
+      status: 'success',
+      data: habits
+    });
+  } catch (error) {
+    console.error("[DOCTOR API] Healthy Habits Error:", error.message);
+    return res.status(500).json({
+      status: 'error',
+      message: "Failed to retrieve healthy habits."
+    });
+  }
+};
