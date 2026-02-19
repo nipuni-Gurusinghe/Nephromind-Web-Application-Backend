@@ -32,6 +32,27 @@ exports.getFAQs = async () => {
         throw new Error("Failed to retrieve FAQs from the database.");
     }
 };
+/**
+ * Express wrapper for the existing getFAQs logic
+ * This is the callback function that the route needs!
+ */
+exports.getFAQsHandler = async (req, res) => {
+    try {
+        // Calls your existing getFAQs function provided in your code
+        const faqs = await exports.getFAQs(); 
+        
+        return res.status(200).json({
+            status: 'success',
+            count: faqs.length,
+            data: faqs
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: error.message
+        });
+    }
+};
 
 /**
  * Creates a new FAQ item in the Firestore database.
