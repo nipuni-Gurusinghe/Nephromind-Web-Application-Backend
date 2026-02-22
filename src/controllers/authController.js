@@ -96,60 +96,63 @@ exports.registerAdmin = async (req, res) => {
  * * **NEW FUNCTION ADDED**
  */
 exports.registerDoctor = async (req, res) => {
-    const { email, password, name, specialistArea } = req.body;
+    // 1. Destructure all fields from the request body
+    const { email, password, name, specialistArea, area, hospital, phone } = req.body;
 
-    // --- 1. Validation ---
-    if (!email || !password || !name) {
+    // --- 2. Validation ---
+    // Added phone, area, and hospital to the basic check
+    if (!email || !password || !name || !area || !hospital || !phone) {
         return res.status(400).json({ 
             status: 'error', 
-            message: 'Missing required fields: email, password, and name.' 
+            message: 'Missing required fields: email, password, name, area, hospital, or phone.' 
         });
     }
+
     if (password.length < 6) {
         return res.status(400).json({
             status: 'error',
-            message: 'Password must be at least 6 characters long (Firebase minimum).'
+            message: 'Password must be at least 6 characters long.'
         });
     }
 
     try {
-        // --- 2. Create User in Firebase Auth ---
+        // --- 3. Create User in Firebase Auth ---
         const user = await auth.createUser({
             email: email,
             password: password,
             displayName: name
         });
         
-        const userId = user.uid; // Get the Doctor ID
+        const userId = user.uid;
 
-        // --- 3. Set Custom Claim (Crucial for Doctor Role) ---
+        // --- 4. Set Custom Claim ---
         await auth.setCustomUserClaims(userId, { doctor: true });
         
-        // --- 4. Save Doctor Data to Firestore (using the 'doctor_user_data' collection) ---
-        // The document ID is set to the Firebase Auth User ID (uid)
+        // --- 5. Save Extended Doctor Data to Firestore ---
         const doctorRef = db.collection('doctor_user_data').doc(userId);
         
-        // ⚠️ CRITICAL SECURITY WARNING: Saving the plain text password here. 
-        // This follows your existing pattern but is highly insecure.
         await doctorRef.set({
-            doctor_id: userId, // Explicitly saving the ID as requested
+            doctor_id: userId,
             email: email,
             username: name,
-            password: password, // <-- Insecurely stored plain text password
-            specialistArea: specialistArea || 'Unspecified', // Optional field
+            password: password, // Note: Still storing plain text per your current project state
+            specialistArea: specialistArea || 'Unspecified',
+            area: area,
+            hospital: hospital,
+            phone: phone,
             createdAt: new Date().toISOString(),
         });
 
-        console.log(`[AUTH] New Doctor registered and Firestore profile created: ${userId} (${email})`);
+        console.log(`[AUTH] New Doctor registered with full profile: ${userId} (${email})`);
 
-        // --- 5. Success Response ---
+        // --- 6. Success Response ---
         return res.status(201).json({
             status: 'success',
             doctorId: userId,
+            message: 'Doctor registered successfully with full profile data.'
         });
 
     } catch (error) {
-        // --- 6. Error Handling ---
         console.error('[AUTH] Doctor Registration Error:', error.code, error.message);
         
         let statusCode = 500;
