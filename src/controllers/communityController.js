@@ -36,8 +36,20 @@ exports.getCommunityEvents = async (req, res) => {
         const filters = {};
         if (isActive !== undefined) filters.isActive = isActive;
         if (type) filters.type = type;
+
         const events = await CommunityEvent.getEvents(filters); 
-        res.status(200).json(events);
+
+        // Convert Firestore Timestamps to ISO strings before sending
+        const formatted = events.map(event => ({
+            ...event,
+            date: event.date?.toDate 
+                ? event.date.toDate().toISOString()   // Firestore Timestamp
+                : event.date?.seconds
+                ? new Date(event.date.seconds * 1000).toISOString()  // Raw {seconds}
+                : event.date ?? null                  // String or null
+        }));
+
+        res.status(200).json(formatted);
 
     } catch (error) {
         console.error("Error in getCommunityEvents controller:", error.message);
