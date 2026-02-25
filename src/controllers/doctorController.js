@@ -64,8 +64,10 @@ exports.getDoctorAppointments = async (req, res) => {
     try {
         const { doctorId } = req.params;
 
+        // ✅ Prefix range query to match "doctorId_YYYY-MM-DD" format stored in Firestore
         const snapshot = await db.collection('book_appointment')
-            .where('doctor_id', '==', doctorId)
+            .where('doctor_id', '>=', doctorId + '_')
+            .where('doctor_id', '<', doctorId + '_\uf8ff')
             .get();
 
         if (snapshot.empty) return res.status(200).json([]);
@@ -91,7 +93,7 @@ exports.getDoctorAppointments = async (req, res) => {
 
             return {
                 id: doc.id,
-                patientId: data.patientId,  // ✅ Required for View History button
+                patientId: data.patientId,
                 patientName,
                 date: data.date,
                 timeSlot: data.timeSlot,
