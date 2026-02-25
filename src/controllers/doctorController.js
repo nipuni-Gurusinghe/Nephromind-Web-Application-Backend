@@ -176,3 +176,228 @@ exports.getPatientHistory = async (req, res) => {
         return res.status(500).json({ status: 'error', message: error.message });
     }
 };
+
+// Add this function to your existing doctorController.js
+
+/**
+ * GET: Fetch water intake history for a specific patient
+ * Route: GET /admin/doctor/patient-water-intake/:patientId
+ */
+exports.getPatientWaterIntake = async (req, res) => {
+    try {
+        const { patientId } = req.params;
+
+        const snapshot = await db.collection('waterIntake')
+            .where('uid', '==', patientId)
+            .orderBy('timestamp', 'asc')
+            .get();
+
+        if (snapshot.empty) {
+            return res.status(200).json({ status: 'success', data: [] });
+        }
+
+        const waterIntake = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                amount: data.amount,
+                timestamp: data.timestamp,
+                uid: data.uid
+            };
+        });
+
+        return res.status(200).json({ status: 'success', data: waterIntake });
+
+    } catch (error) {
+        console.error('Error fetching water intake history:', error);
+        return res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+/**
+ * POST: Mark doctor availability for a specific date
+ * Route: POST /admin/doctor/availability
+ * Body: { doctorId, doctorName, hospitalName, date, isAvailable, slots }
+ */
+exports.markDoctorAvailability = async (req, res) => {
+    try {
+        const { doctorId, doctorName, hospitalName, date, isAvailable, slots } = req.body;
+
+        // --- Validation ---
+        if (!doctorId) return res.status(400).json({ status: 'error', message: 'doctorId is required.' });
+        if (!doctorName) return res.status(400).json({ status: 'error', message: 'doctorName is required.' });
+        if (!hospitalName) return res.status(400).json({ status: 'error', message: 'hospitalName is required.' });
+        if (!date) return res.status(400).json({ status: 'error', message: 'date is required (YYYY-MM-DD).' });
+        if (typeof isAvailable !== 'boolean') return res.status(400).json({ status: 'error', message: 'isAvailable must be a boolean.' });
+        if (!slots || typeof slots !== 'object' || Object.keys(slots).length === 0) {
+            return res.status(400).json({ status: 'error', message: 'slots map is required and must not be empty.' });
+        }
+
+        for (const [slotName, maxPatients] of Object.entries(slots)) {
+            if (typeof maxPatients !== 'number' || maxPatients < 1 || !Number.isInteger(maxPatients)) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: `Slot "${slotName}" must have a positive integer value for max patients.`
+                });
+            }
+        }
+
+        const parsedDate = new Date(date + 'T00:00:00+05:30');
+        if (isNaN(parsedDate.getTime())) {
+            return res.status(400).json({ status: 'error', message: 'Invalid date format. Use YYYY-MM-DD.' });
+        }
+
+        // ✅ Use doctorId_date as document ID — unique per doctor per date, no overwrite across dates
+        const docId = `${doctorId}_${date}`;
+        const docRef = db.collection('doctor_availability').doc(docId);
+
+        await docRef.set({
+            doctorId,
+            doctorName,
+            hospitalName,
+            date: parsedDate,
+            isAvailable,
+            slots,
+            updatedAt: new Date(),
+        }, { merge: true });
+
+        return res.status(200).json({
+            status: 'success',
+            message: `Availability for ${doctorName} on ${date} saved successfully.`,
+            data: { doctorId, doctorName, hospitalName, date, isAvailable, slots }
+        });
+
+    } catch (error) {
+        console.error('Error marking doctor availability:', error);
+        return res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+/**
+ * GET: Fetch ALL availability records for a specific doctor
+ * Route: GET /admin/doctor/availability/:doctorId
+ */
+exports.getDoctorAvailability = async (req, res) => {
+    try {
+        const { doctorId } = req.params;
+
+        // ✅ Query all docs where doctorId matches, instead of fetching a single doc
+        const snapshot = await db.collection('doctor_availability')
+            .where('doctorId', '==', doctorId)
+            .orderBy('date', 'asc')
+            .get();
+
+        if (snapshot.empty) {
+            return res.status(404).json({ status: 'error', message: 'No availability found for this doctor.' });
+        }
+
+        const availability = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                availabilityId: doc.id,        // e.g. "5Em6D..._2026-02-26"
+                doctorId: data.doctorId,
+                doctorName: data.doctorName,
+                hospitalName: data.hospitalName,
+                date: data.date?.toDate?.()?.toISOString() ?? data.date,
+                isAvailable: data.isAvailable,
+                slots: data.slots,
+            };
+        });
+
+        return res.status(200).json({ status: 'success', data: availability });
+
+    } catch (error) {
+        console.error('Error fetching doctor availability:', error);
+        return res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+/**
+ * PATCH: Toggle isAvailable for a specific availability record
+ * Route: PATCH /admin/doctor/availability/:availabilityId
+ * Body: { isAvailable }
+ */
+exports.toggleDoctorAvailability = async (req, res) => {
+    try {
+        const { availabilityId } = req.params;   // ✅ now uses full doc ID like "doctorId_date"
+        const { isAvailable } = req.body;
+
+        if (typeof isAvailable !== 'boolean') {
+            return res.status(400).json({ status: 'error', message: 'isAvailable must be a boolean.' });
+        }
+
+        await db.collection('doctor_availability').doc(availabilityId).update({
+            isAvailable,
+            updatedAt: new Date(),
+        });
+
+        return res.status(200).json({
+            status: 'success',
+            message: `Doctor availability set to ${isAvailable}.`,
+        });
+
+    } catch (error) {
+        console.error('Error toggling availability:', error);
+        return res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+
+/**
+ * GET: Fetch a single doctor's profile from doctor_user_data
+ * Route: GET /admin/doctor/profile/:doctorId
+ */
+exports.getDoctorProfile = async (req, res) => {
+    try {
+        const { doctorId } = req.params;
+
+        const doc = await db.collection('doctor_user_data').doc(doctorId).get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ status: 'error', message: 'Doctor not found.' });
+        }
+
+        const data = doc.data();
+
+        return res.status(200).json({
+            status: 'success',
+            data: {
+                doctorId: doc.id,
+                username: data.username || '',      
+                hospital: data.hospital || '',      
+                email: data.email || '',
+                specialistArea: data.specialistArea || '',
+                area: data.area || '',
+                phone: data.phone || '',
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching doctor profile:', error);
+        return res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

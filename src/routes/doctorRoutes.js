@@ -10,7 +10,12 @@ router.get('/community/healthy-habits', healthyHabitsController.getHealthyHabits
 router.get('/questions/pending', doctorController.getPendingQuestions);
 router.patch('/questions/answer/:questionId', doctorController.answerQuestion);
 router.get('/patient-history/:patientId', doctorController.getPatientHistory);
+router.get('/patient-water-intake/:patientId', doctorController.getPatientWaterIntake);
 router.get('/appointments/:doctorId', doctorController.getDoctorAppointments);
 router.patch('/appointments/status/:appointmentId', doctorController.updateAppointmentStatus);
+router.post('/availability', doctorController.markDoctorAvailability);
+router.get('/availability/:doctorId', doctorController.getDoctorAvailability);
+router.patch('/availability/:availabilityId', doctorController.toggleDoctorAvailability);
+router.get('/profile/:doctorId', doctorController.getDoctorProfile);
 
 module.exports = router;
